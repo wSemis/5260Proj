@@ -24,7 +24,7 @@ class ZJUMoCapDataset(Dataset):
         self.root_dir = cfg.root_dir
         self.refine = cfg.refine
         if self.refine:
-            self.root_dir = "../../data/refined_ZJUMoCap_arah_format"
+            self.root_dir = self.root_dir
 
         self.subject = cfg.subject
         self.train_frames = cfg.train_frames

@@ -101,7 +101,7 @@ save_iterations: [30000]
 seed: -1
 checkpoint_iterations: []
 start_checkpoint: null
-wandb_disable: false
+wandb_disable: true
 
 mode: train
 load_ckpt: null
