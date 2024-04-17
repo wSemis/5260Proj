@@ -180,13 +180,39 @@ class DirectPoseOptimization(PoseCorrection):
         pose_body = np.array(pose_body)
         pose_hand = np.array(pose_hand)
         trans = np.array(trans)
-        self.root_orients = nn.Embedding.from_pretrained(torch.from_numpy(root_orient).float(), freeze=False)
-        self.pose_bodys = nn.Embedding.from_pretrained(torch.from_numpy(pose_body).float(), freeze=False)
-        self.pose_hands = nn.Embedding.from_pretrained(torch.from_numpy(pose_hand).float(), freeze=False)
-        self.trans = nn.Embedding.from_pretrained(torch.from_numpy(trans).float(), freeze=False)
+        self.root_orients = nn.Embedding.from_pretrained(torch.from_numpy(root_orient).float(), freeze=True)
+        self.root_orients_mlp = self.get_nn_from_emb(self.root_orients)
+        
+        self.pose_bodys = nn.Embedding.from_pretrained(torch.from_numpy(pose_body).float(), freeze=True)
+        self.pose_bodys_mlp = self.get_nn_from_emb(self.pose_bodys)
+       
+        self.pose_hands = nn.Embedding.from_pretrained(torch.from_numpy(pose_hand).float(), freeze=True)
+        self.pose_hands_mlp = self.get_nn_from_emb(self.pose_hands)
+        
+        self.trans = nn.Embedding.from_pretrained(torch.from_numpy(trans).float(), freeze=True)
+        self.trans_mlp = self.get_nn_from_emb(self.trans)
 
         self.register_parameter('betas', nn.Parameter(torch.tensor(betas, dtype=torch.float32)))
 
+    def get_nn_from_emb(self, emb: nn.Embedding):
+        batch, feat = emb.weight.shape
+        def get_nn(numLayers, input_dim, output_dim, hidden_dim):
+            layers = []
+            for i in range(numLayers):
+                if i == 0:
+                    layers.append(nn.Linear(input_dim, hidden_dim))
+                elif i == numLayers - 1:
+                    layers.append(nn.Linear(hidden_dim, output_dim))
+                else:
+                    layers.append(nn.Linear(hidden_dim, hidden_dim))
+                layers.append(nn.LeakyReLU())
+            return nn.Sequential(*layers)
+        if feat == 3:
+            return get_nn(4, feat, feat, 16)
+        elif feat == 6:
+            return get_nn(4, feat, feat, 32)
+        return get_nn(4, feat, feat, 256)
+    
     def pose_correct(self, camera, iteration):
         if iteration < self.cfg.get('delay', 0):
             return camera, {}
@@ -199,6 +225,11 @@ class DirectPoseOptimization(PoseCorrection):
         pose_body = self.pose_bodys(idx)
         pose_hand = self.pose_hands(idx)
         trans = self.trans(idx)
+        
+        root_orient = root_orient + self.root_orients_mlp(root_orient)
+        pose_body = pose_body + self.pose_bodys_mlp(pose_body)
+        pose_hand = pose_hand + self.pose_hands_mlp(pose_hand)
+        trans = trans + self.trans_mlp(trans)
 
         betas = self.betas
 

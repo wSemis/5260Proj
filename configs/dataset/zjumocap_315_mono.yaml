@@ -1,11 +1,11 @@
 # @package _global_
 
-dataset_name: zju_393_mono
+dataset_name: zju_315_mono
 
 dataset:
   name: zjumocap
   root_dir: "/home/wdebang/workspace/3dgs-avatar-release/data/zju_processed"
-  subject: CoreView_393
+  subject: CoreView_315
   refine: false
 
   train_views: [ '1' ]
@@ -16,12 +16,12 @@ dataset:
     all: []
   predict_views: ['1']
 
-  train_frames: [ 0, 0, 1 ]
+  train_frames: [ 0, 570, 1 ]
   val_frames: [ 0, 1, 1 ]
   test_frames:
-    view: [0, 0, 30]
-    video: [0, 0, 1]
-    all: [0, 0, 1]
+    view: [0, 570, 30]
+    video: [0, 570, 1]
+    all: [0, 570, 1]
   predict_frames: [0, 0, 1]
 
   img_hw:

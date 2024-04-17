@@ -19,7 +19,7 @@ from gaussian_renderer import render
 import torchvision
 from utils.general_utils import fix_random
 from scene import GaussianModel
-
+import matplotlib.pyplot as plt
 from utils.general_utils import Evaluator, PSEvaluator
 
 import hydra
@@ -116,6 +116,9 @@ def test(config):
                          wandb.Image(gt[None], caption='gt_{}'.format(view.image_name))]
 
             wandb.log({'test_images': wandb_img})
+            gt_np = gt.cpu().numpy().transpose(1, 2, 0)
+            render_np = rendering.cpu().numpy().transpose(1, 2, 0)
+            compare_img(gt_np, render_np, os.path.join(render_path, f"render_{view.image_name}_compare.png"))
 
             torchvision.utils.save_image(rendering, os.path.join(render_path, f"render_{view.image_name}.png"))
 
@@ -145,6 +148,43 @@ def test(config):
                  lpips=_lpips.cpu().numpy(),
                  time=_time)
 
+
+def compare_img(gt, render, save_path:str):
+    exp_name = save_path.split('/')[-4] # -1 file, -2 renders, -3 test_view -4 exp
+    dataset_seq_no = exp_name.split('_')[1]
+    base_line_path = f'/home/wdebang/workspace/3dgs-avatar-release/data/baseline/{dataset_seq_no}'
+    img_name = save_path.split('/')[-1]
+    img_name = img_name.replace('_compare', '')
+    base_line_img_path = os.path.join(base_line_path, img_name)
+    
+    if os.path.exists(base_line_img_path):
+        base_line = plt.imread(base_line_img_path)
+        fig, ax = plt.subplots(1, 3, figsize=(15, 5.5))
+        ax[0].imshow(base_line)
+        ax[0].set_title('Baseline')
+        ax[0].axis('off')
+        ax[2].imshow(gt)
+        ax[2].set_title('GT')
+        ax[2].axis('off')
+        ax[1].imshow(render)
+        ax[1].set_title('Render')
+        ax[1].axis('off')
+        plt.tight_layout()
+        plt.savefig(save_path)
+        plt.close()
+        return
+    
+    print(f'Baseline image not found for {dataset_seq_no}: {img_name}')
+    fig, ax = plt.subplots(1, 2, figsize=(10, 5))
+    ax[0].imshow(gt)
+    ax[0].set_title('GT')
+    ax[0].axis('off')
+    ax[1].imshow(render)
+    ax[1].set_title('Render')
+    ax[1].axis('off')
+    plt.tight_layout()
+    plt.savefig(save_path)
+    plt.close()
 
 @hydra.main(version_base=None, config_path="configs", config_name="config")
 def main(config):

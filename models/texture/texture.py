@@ -65,7 +65,7 @@ class ColorMLP(ColorPrecompute):
             d_in += self.latent_dim
             self.frame_dict = metadata['frame_dict']
             self.latent = nn.Embedding(len(self.frame_dict), self.latent_dim)
-
+        
         d_out = 3
         self.mlp = VanillaCondMLP(d_in, 0, d_out, cfg.mlp)
         self.color_activation = nn.Sigmoid()
