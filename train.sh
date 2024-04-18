@@ -21,7 +21,7 @@ if ! [[ "$2" =~ ^[0-9]+$ ]] || ! contains_element "$2" "${cuda_values[@]}"; then
 fi
 
 echo "Training on dataset zjumocap_${1}_mono with CUDA_VISIBLE_DEVICES=$2"
-echo "Training on dataset zjumocap_${1}_mono with CUDA_VISIBLE_DEVICES=$2" > train_${1}_cuda${2}.log
+echo "Training on dataset zjumocap_${1}_mono with CUDA_VISIBLE_DEVICES=$2" > exp/${1}.log
 export CUDA_VISIBLE_DEVICES=${2}
-python train.py dataset=zjumocap_${1}_mono >> train_${1}_cuda${2}.log 2>&1
-python render.py mode=test dataset.test_mode=view dataset=zjumocap_${1}_mono >> train_${1}_cuda${2}.log 2>&1
+python train.py dataset=zjumocap_${1}_mono >> exp/${1}.log 2>&1
+python render.py mode=test dataset.test_mode=view dataset=zjumocap_${1}_mono >> exp/${1}.log 2>&1

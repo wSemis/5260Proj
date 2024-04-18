@@ -69,6 +69,7 @@ class ColorMLP(ColorPrecompute):
         d_out = 3
         self.mlp = VanillaCondMLP(d_in, 0, d_out, cfg.mlp)
         self.color_activation = nn.Sigmoid()
+        self.avg_embed = None
 
     def compose_input(self, gaussians, camera):
         features = gaussians.get_features.squeeze(-1)
@@ -105,13 +106,20 @@ class ColorMLP(ColorPrecompute):
             features = torch.cat([features, gaussians.non_rigid_feature], dim=1)
         if self.latent_dim > 0:
             frame_idx = camera.frame_id
-            if frame_idx not in self.frame_dict:
-                latent_idx = len(self.frame_dict) - 1
+            if self.training or True:
+                if frame_idx not in self.frame_dict:
+                    latent_idx = len(self.frame_dict) - 1
+                    print(f"Frame {frame_idx} not in frame_dict, using last latent code")
+                else:
+                    latent_idx = self.frame_dict[frame_idx]
+        
+                latent_idx = torch.Tensor([latent_idx]).long().to(features.device)
+                latent_code = self.latent(latent_idx)
+                latent_code = latent_code.expand(features.shape[0], -1)
             else:
-                latent_idx = self.frame_dict[frame_idx]
-            latent_idx = torch.Tensor([latent_idx]).long().to(features.device)
-            latent_code = self.latent(latent_idx)
-            latent_code = latent_code.expand(features.shape[0], -1)
+                if self.avg_embed is None:
+                    self.avg_embed = torch.mean(self.latent.weight, dim=0)
+                latent_code = self.avg_embed.expand(features.shape[0], -1)
             features = torch.cat([features, latent_code], dim=1)
 
         return features
@@ -121,7 +129,13 @@ class ColorMLP(ColorPrecompute):
         inp = self.compose_input(gaussians, camera)
         output = self.mlp(inp)
         color = self.color_activation(output)
-        return color
+        def compute_l2_reg(params):
+            l2_loss = torch.tensor(0.).to(inp.device)
+            for param in params:
+                l2_loss += torch.sum(param ** 2)
+            return l2_loss
+        loss_l2_reg = compute_l2_reg(self.mlp.parameters())
+        return color, {"texture_l2_reg": loss_l2_reg * 0.01}
 
 
 def get_texture(cfg, metadata):

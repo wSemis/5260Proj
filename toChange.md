@@ -1,6 +1,7 @@
 # To change
 
-` Pose correction MLP
+` Pose correction MLP done
 ` LBS MLP
-` latent embedding, unkown? avg?
-` Hashgrid param
+` latent embedding, unkown? avg? checked
+` Hashgrid param? Hashgrid or PE?
+` Optimization pipeline (separate optimization of deformer)

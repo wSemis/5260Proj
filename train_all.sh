@@ -2,7 +2,7 @@
 
 # Define an array of numbers
 numbers=(386 387 393)
-
+mkdir -p exp
 # Check if a tmux session exists, else create one
 session="training_session"
 tmux has-session -t $session 2>/dev/null

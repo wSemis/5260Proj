@@ -53,8 +53,9 @@ class GaussianConverter(nn.Module):
         loss_reg.update(loss_reg_pose)
         loss_reg.update(loss_reg_deformer)
 
-        color_precompute = self.texture(deformed_gaussians, camera)
-
+        color_precompute, loss_rep_texture = self.texture(deformed_gaussians, camera)
+        loss_reg.update(loss_rep_texture)
+        
         return deformed_gaussians, loss_reg, color_precompute
 
     def optimize(self):
