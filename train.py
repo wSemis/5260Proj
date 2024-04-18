@@ -15,7 +15,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from random import randint
-from utils.loss_utils import l1_loss, ssim
+from utils.loss_utils import l1_loss, ssim, tv_loss
 from gaussian_renderer import render
 from scene import Scene, GaussianModel
 from utils.general_utils import fix_random, Evaluator, PSEvaluator
@@ -68,6 +68,7 @@ def training(config):
     scene = Scene(config, gaussians, config.exp_dir)
     scene.train()
 
+    print(f"Training {config.name} with {len(scene.train_dataset)} training views and {len(scene.test_dataset)} test views")
     gaussians.training_setup(opt)
     if checkpoint:
         scene.load_checkpoint(checkpoint)
@@ -175,6 +176,12 @@ def training(config):
             lbd = opt.get(f"lambda_{name}", 0.)
             lbd = C(iteration, lbd)
             loss += lbd * value
+            
+        # neighbor normal loss
+        lambda_nn = C(iteration, config.opt.get('lambda_nn', 0.))
+        if lambda_nn > 0:
+            normals = render_pkg["normals"]
+            loss += lambda_nn * tv_loss(normals)
         loss.backward()
 
         iter_end.record()
@@ -283,7 +290,8 @@ def validation(iteration, testing_iterations, testing_interval, scene : Scene, e
             ssim_test /= len(config['cameras'])
             lpips_test /= len(config['cameras'])
             l1_test /= len(config['cameras'])
-            print("\n[ITER {}] Evaluating {}: L1 {} PSNR {}".format(iteration, config['name'], l1_test, psnr_test))
+            print("\n[ITER {}] {} result: L1 {} PSNR {} SSIM {} LPIPS {}, on {} samples".format(iteration, config['name'], l1_test, psnr_test,
+                                                                                                ssim_test, lpips_test.item() * 1000, len(config['cameras'])))
             wandb.log({
                 config['name'] + '/loss_viewpoint - l1_loss': l1_test,
                 config['name'] + '/loss_viewpoint - psnr': psnr_test,

@@ -142,6 +142,8 @@ def test(config):
                    'metrics/ssim': _ssim,
                    'metrics/lpips': _lpips,
                    'metrics/time': _time})
+        print()
+        print(f"PSNR: {_psnr}, SSIM: {_ssim}, LPIPS: {_lpips * 1000}, Time: {_time}")
         np.savez(os.path.join(config.exp_dir, config.suffix, 'results.npz'),
                  psnr=_psnr.cpu().numpy(),
                  ssim=_ssim.cpu().numpy(),

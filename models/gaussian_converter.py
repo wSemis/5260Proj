@@ -54,9 +54,10 @@ class GaussianConverter(nn.Module):
         loss_reg.update(loss_reg_deformer)
 
         color_precompute, loss_rep_texture = self.texture(deformed_gaussians, camera)
+        normals = self.calculate_normal(deformed_gaussians, camera)
         loss_reg.update(loss_rep_texture)
         
-        return deformed_gaussians, loss_reg, color_precompute
+        return deformed_gaussians, loss_reg, color_precompute, normals
 
     def optimize(self):
         grad_clip = self.cfg.opt.get('grad_clip', 0.)
@@ -65,3 +66,31 @@ class GaussianConverter(nn.Module):
         self.optimizer.step()
         self.optimizer.zero_grad()
         self.scheduler.step()
+        
+    def calculate_normal(self, gaussians, camera):
+        scale = gaussians._scaling
+        from utils.general_utils import build_rotation
+        rot = build_rotation(gaussians._rotation)
+        normals = torch.gather(rot, dim=2, index=scale.argmin(1).reshape(-1, 1, 1).expand(-1, 3, 1)).squeeze(-1)
+        # normals = 
+        return normals
+    
+    # def no():
+    #     quats_crop = quats_crop / quats_crop.norm(dim=-1, keepdim=True)
+    #     normals = F.one_hot(
+    #         torch.argmin(scales_crop, dim=-1), num_classes=3
+    #     ).float()
+    #     rots = quat_to_rotmat(quats_crop)
+    #     normals = torch.bmm(rots, normals[:, :, None]).squeeze(-1)
+    #     normals = F.normalize(normals, dim=1)
+    #     viewdirs = (
+    #         -means_crop.detach() + camera.camera_to_worlds.detach()[..., :3, 3]
+    #     )
+    #     viewdirs = viewdirs / viewdirs.norm(dim=-1, keepdim=True)
+    #     dots = (normals * viewdirs).sum(-1)
+    #     negative_dot_indices = dots < 0
+    #     normals[negative_dot_indices] = -normals[negative_dot_indices]
+    #     # update parameter group normals
+    #     self.gauss_params["normals"] = normals
+    #     # convert normals from world space to camera space
+    #     normals = normals @ camera.camera_to_worlds.squeeze(0)[:3, :3]

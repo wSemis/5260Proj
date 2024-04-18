@@ -38,7 +38,8 @@ class Camera:
         self.data['full_proj_transform'] = (
             self.world_view_transform.unsqueeze(0).bmm(self.projection_matrix.unsqueeze(0))).squeeze(0)
         self.data['camera_center'] = self.world_view_transform.inverse()[3, :3]
-
+        self.data['camera_to_world'] = self.world_view_transform.inverse()
+        
         self.data['rots'] = self.rots.to(self.data_device)
         self.data['Jtrs'] = self.Jtrs.to(self.data_device)
         self.data['bone_transforms'] = self.bone_transforms.to(self.data_device)

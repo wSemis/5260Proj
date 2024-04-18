@@ -320,8 +320,8 @@ class ZJUMoCapDataset(Dataset):
         image[~mask] = 255. if self.white_bg else 0.
         image = image / 255.
 
-        image = torch.from_numpy(image).permute(2, 0, 1).float()
-        mask = torch.from_numpy(mask).unsqueeze(0).float()
+        image = torch.from_numpy(image).permute(2, 0, 1).float().cuda()
+        mask = torch.from_numpy(mask).unsqueeze(0).float().cuda()
 
         # update camera parameters
         K[0, :] *= self.w / self.W

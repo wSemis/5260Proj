@@ -101,3 +101,15 @@ def aiap_loss(x_canonical, x_deformed, n_neighbors=5, nn_ix=None):
     loss = F.l1_loss(dists_canonical, dists_deformed)
 
     return loss
+
+def tv_loss(pred):
+    """
+    Total variation loss
+    """
+    if len(pred.shape) == 4:
+        dy = torch.abs(pred[:, :, 1:, :] - pred[:, :, :-1, :])
+        dx = torch.abs(pred[:, :, :, 1:] - pred[:, :, :, :-1])
+    else:
+        dy = torch.abs(pred[:, 1:, :] - pred[:, :-1, :])
+        dx = torch.abs(pred[:, :, 1:] - pred[:, :, :-1])
+    return torch.mean(dx) + torch.mean(dy)

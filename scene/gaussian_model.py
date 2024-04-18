@@ -54,16 +54,15 @@ class GaussianModel:
             self.feature_dim = (self.max_sh_degree + 1) ** 2
         else:
             self.feature_dim = cfg.feature_dim
-
-        self._xyz = torch.empty(0)
-        self._features_dc = torch.empty(0)
-        self._features_rest = torch.empty(0)
-        self._scaling = torch.empty(0)
-        self._rotation = torch.empty(0)
-        self._opacity = torch.empty(0)
-        self.max_radii2D = torch.empty(0)
-        self.xyz_gradient_accum = torch.empty(0)
-        self.denom = torch.empty(0)
+        self._xyz = torch.empty(0, device="cuda")
+        self._features_dc = torch.empty(0, device="cuda")
+        self._features_rest = torch.empty(0, device="cuda")
+        self._scaling = torch.empty(0, device="cuda")
+        self._rotation = torch.empty(0, device="cuda")
+        self._opacity = torch.empty(0, device="cuda")
+        self.max_radii2D = torch.empty(0, device="cuda")
+        self.xyz_gradient_accum = torch.empty(0, device="cuda")
+        self.denom = torch.empty(0, device="cuda")
         self.optimizer = None
         self.percent_dense = 0
         self.spatial_lr_scale = 0

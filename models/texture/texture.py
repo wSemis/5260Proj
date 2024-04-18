@@ -135,7 +135,7 @@ class ColorMLP(ColorPrecompute):
                 l2_loss += torch.sum(param ** 2)
             return l2_loss
         loss_l2_reg = compute_l2_reg(self.mlp.parameters())
-        return color, {"texture_l2_reg": loss_l2_reg * 0.01}
+        return color, {"texture_l2_reg": loss_l2_reg}
 
 
 def get_texture(cfg, metadata):

@@ -27,7 +27,7 @@ def render(data,
     
     Background tensor (bg_color) must be on GPU!
     """
-    pc, loss_reg, colors_precomp = scene.convert_gaussians(data, iteration, compute_loss)
+    pc, loss_reg, colors_precomp, gaussian_normals = scene.convert_gaussians(data, iteration, compute_loss)
 
     # Create zero tensor. We will use it to make pytorch return gradients of the 2D (screen-space) means
     screenspace_points = torch.zeros_like(pc.get_xyz, dtype=pc.get_xyz.dtype, requires_grad=True, device="cuda") + 0
@@ -52,7 +52,7 @@ def render(data,
         sh_degree=pc.active_sh_degree,
         campos=data.camera_center,
         prefiltered=False,
-        debug=pipe.debug
+        debug=pipe.debug,
     )
 
     rasterizer = GaussianRasterizer(raster_settings=raster_settings)
@@ -100,6 +100,17 @@ def render(data,
             cov3D_precomp=cov3D_precomp)
         opacity_image = opacity_image[:1]
 
+    normals = None
+    if compute_loss:
+        normals, _ = rasterizer(
+            means3D=means3D,
+            means2D=means2D,
+            shs=None,
+            colors_precomp=gaussian_normals,
+            opacities=opacity,
+            scales=scales,
+            rotations=rotations,
+            cov3D_precomp=cov3D_precomp,)
 
     # Those Gaussians that were frustum culled or had a radius of 0 were not visible.
     # They will be excluded from value updates used in the splitting criteria.
@@ -110,4 +121,5 @@ def render(data,
             "radii": radii,
             "loss_reg": loss_reg,
             "opacity_render": opacity_image,
+            "normals": normals,
             }

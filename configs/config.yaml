@@ -76,6 +76,8 @@ opt:
   lambda_pose: 0.
   lambda_aiap_xyz: 1.
   lambda_aiap_cov: 100.
+  lambda_nn: 0.08
+  lambda_texture_l2_reg: 0
 
   # densification configs
   percent_dense: 0.01
