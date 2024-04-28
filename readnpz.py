@@ -1,12 +1,15 @@
+# %%
 import sys
 import os
 import numpy as np
 
 idx = sys.argv[1]
 
+print()
+print()
 for idx in [386, 387, 393]: 
     file_path = f'/home/wdebang/workspace/3dgs-avatar-release/exp/zju_{idx}_mono-direct-mlp_field-ingp-shallow_mlp-default/test-view/results.npz'
-
+    # file_path = '/home/wdebang/workspace/3dgs-avatar-release/exp_old/exp_normal_loss/zju_386_mono-direct-mlp_field-ingp-shallow_mlp-default/test-view/results.npz'
     di = np.load(file_path)
     print(idx)
     for k in di.keys():
@@ -17,3 +20,4 @@ for idx in [386, 387, 393]:
         if di[k].shape:
             print(di[k][0])
     print()
+# %%

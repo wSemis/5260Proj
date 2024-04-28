@@ -182,6 +182,12 @@ def training(config):
         if lambda_nn > 0:
             normals = render_pkg["normals"]
             loss += lambda_nn * tv_loss(normals)
+        
+        # nerghbor color loss
+        lambda_nc = C(iteration, config.opt.get('lambda_nc', 0.))
+        if lambda_nc > 0:
+            loss += lambda_nc * tv_loss(image)
+            
         loss.backward()
 
         iter_end.record()

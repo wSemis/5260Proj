@@ -234,6 +234,9 @@ class HashGridwithMLP(NonRigidDeform):
             latent_code = latent_code.expand(pose_feat.shape[0], -1)
             pose_feat = torch.cat([pose_feat, latent_code], dim=1)
 
+        # if self.training and (torch.rand(1).item() < 0.3):
+        #     pose_feat = torch.zeros_like(pose_feat)
+
         xyz = gaussians.get_xyz
         xyz_norm = self.aabb.normalize(xyz, sym=True)
         deformed_gaussians = gaussians.clone()

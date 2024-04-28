@@ -180,17 +180,25 @@ class DirectPoseOptimization(PoseCorrection):
         pose_body = np.array(pose_body)
         pose_hand = np.array(pose_hand)
         trans = np.array(trans)
-        self.root_orients = nn.Embedding.from_pretrained(torch.from_numpy(root_orient).float(), freeze=True)
-        self.root_orients_mlp = self.get_nn_from_emb(self.root_orients)
+        self.use_mlp = True
+        if self.use_mlp:
         
-        self.pose_bodys = nn.Embedding.from_pretrained(torch.from_numpy(pose_body).float(), freeze=True)
-        self.pose_bodys_mlp = self.get_nn_from_emb(self.pose_bodys)
-       
-        self.pose_hands = nn.Embedding.from_pretrained(torch.from_numpy(pose_hand).float(), freeze=True)
-        self.pose_hands_mlp = self.get_nn_from_emb(self.pose_hands)
+            self.root_orients = nn.Embedding.from_pretrained(torch.from_numpy(root_orient).float(), freeze=True)
+            self.root_orients_mlp = self.get_nn_from_emb(self.root_orients)
+            
+            self.pose_bodys = nn.Embedding.from_pretrained(torch.from_numpy(pose_body).float(), freeze=True)
+            self.pose_bodys_mlp = self.get_nn_from_emb(self.pose_bodys)
         
-        self.trans = nn.Embedding.from_pretrained(torch.from_numpy(trans).float(), freeze=True)
-        self.trans_mlp = self.get_nn_from_emb(self.trans)
+            self.pose_hands = nn.Embedding.from_pretrained(torch.from_numpy(pose_hand).float(), freeze=True)
+            self.pose_hands_mlp = self.get_nn_from_emb(self.pose_hands)
+            
+            self.trans = nn.Embedding.from_pretrained(torch.from_numpy(trans).float(), freeze=True)
+            self.trans_mlp = self.get_nn_from_emb(self.trans)
+        else:
+            self.root_orients = nn.Embedding.from_pretrained(torch.from_numpy(root_orient).float(), freeze=False)
+            self.pose_bodys = nn.Embedding.from_pretrained(torch.from_numpy(pose_body).float(), freeze=False)
+            self.pose_hands = nn.Embedding.from_pretrained(torch.from_numpy(pose_hand).float(), freeze=False)
+            self.trans = nn.Embedding.from_pretrained(torch.from_numpy(trans).float(), freeze=False)
 
         self.register_parameter('betas', nn.Parameter(torch.tensor(betas, dtype=torch.float32)))
 
@@ -226,10 +234,11 @@ class DirectPoseOptimization(PoseCorrection):
         pose_hand = self.pose_hands(idx)
         trans = self.trans(idx)
         
-        root_orient = root_orient + self.root_orients_mlp(root_orient)
-        pose_body = pose_body + self.pose_bodys_mlp(pose_body)
-        pose_hand = pose_hand + self.pose_hands_mlp(pose_hand)
-        trans = trans + self.trans_mlp(trans)
+        if self.use_mlp:
+            root_orient = root_orient + self.root_orients_mlp(root_orient)
+            pose_body = pose_body + self.pose_bodys_mlp(pose_body)
+            pose_hand = pose_hand + self.pose_hands_mlp(pose_hand)
+            trans = trans + self.trans_mlp(trans)
 
         betas = self.betas
 
