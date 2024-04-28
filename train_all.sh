@@ -2,6 +2,7 @@
 
 # Define an array of numbers
 numbers=(386 387 393)
+gpus=(3 4 5)
 mkdir -p exp
 echo $1 >> exp/info.txt
 # Check if a tmux session exists, else create one
@@ -15,9 +16,10 @@ fi
 # Loop through the array with indices and create a new window for each command
 for i in "${!numbers[@]}"; do
     exp_num=${numbers[$i]}
-    echo "Setting up tmux window for num=$exp_num and cuda=$i"
+    gpu_num=${gpus[$i]}
+    echo "Setting up tmux window for num=$exp_num and cuda=$gpu_num"
     # Create a new window in tmux session and run the script
-    tmux new-window -t $session -n "train_$exp_num" "./train.sh $exp_num $i"
+    tmux new-window -t $session -n "train_$exp_num" "./train.sh $exp_num $gpu_num"
 done
 
 tmux detach -s $session

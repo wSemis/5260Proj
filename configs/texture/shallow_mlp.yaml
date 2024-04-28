@@ -11,6 +11,7 @@ model:
 
     feature_dim: ${model.gaussian.feature_dim}
     use_xyz: false
+    use_xyz_feat: false
     use_cov: false
     use_normal: false
     sh_degree: 3

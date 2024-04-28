@@ -43,6 +43,7 @@ class ColorMLP(ColorPrecompute):
         d_in = cfg.feature_dim
 
         self.use_xyz = cfg.get('use_xyz', False)
+        self.use_xyz_feat = cfg.get('use_xyz_feat', False)
         self.use_cov = cfg.get('use_cov', False)
         self.use_normal = cfg.get('use_normal', False)
         self.sh_degree = cfg.get('sh_degree', 0)
@@ -52,6 +53,8 @@ class ColorMLP(ColorPrecompute):
 
         if self.use_xyz:
             d_in += 3
+        if self.use_xyz_feat:
+            d_in += 48 # Need to be changed if changing hashgrid param
         if self.use_cov:
             d_in += 6 # only upper triangle suffice
         if self.use_normal:
@@ -78,6 +81,12 @@ class ColorMLP(ColorPrecompute):
             aabb = self.metadata["aabb"]
             xyz_norm = aabb.normalize(gaussians.get_xyz, sym=True)
             features = torch.cat([features, xyz_norm], dim=1)
+        if self.use_xyz_feat:
+            if hasattr(gaussians, "_xyz_feat"):
+                xyz_feat = gaussians._xyz_feat
+            else:
+                xyz_feat = torch.zeros(n_points, 48, device=features.device)
+            features = torch.cat([features, xyz_feat], dim=1)
         if self.use_cov:
             cov = gaussians.get_covariance()
             features = torch.cat([features, cov], dim=1)
