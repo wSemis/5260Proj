@@ -84,6 +84,8 @@ def training(config):
     ema_loss_for_log = 0.0
     progress_bar = tqdm(range(first_iter, opt.iterations), desc="Training progress")
     first_iter += 1
+    
+    mask_avg_loss = config.opt.get('mask_avg_loss', False)
     for iteration in range(first_iter, opt.iterations + 1):
 
         iter_start.record()
@@ -120,8 +122,15 @@ def training(config):
         lambda_dssim = C(iteration, config.opt.lambda_dssim)
         loss_l1 = torch.tensor(0.).cuda()
         loss_dssim = torch.tensor(0.).cuda()
+        # import pdb; pdb.set_trace()
+        
+        gt_mask = data.original_mask.cuda()
+
         if lambda_l1 > 0.:
-            loss_l1 = l1_loss(image.permute(1,2,0)[bound_mask.repeat(3, 1, 1)[0]==1], gt_image.permute(1,2,0)[bound_mask.repeat(3, 1, 1)[0]==1])
+            if mask_avg_loss:
+                loss_l1 = l1_loss(image, gt_image, gt_mask)
+            else:
+                loss_l1 = l1_loss(image.permute(1,2,0)[bound_mask.repeat(3, 1, 1)[0]==1], gt_image.permute(1,2,0)[bound_mask.repeat(3, 1, 1)[0]==1])
         if lambda_dssim > 0.:
             loss_dssim = 1.0 - ssim(image, gt_image)
         loss = lambda_l1 * loss_l1 + lambda_dssim * loss_dssim
@@ -186,7 +195,10 @@ def training(config):
         lambda_nn = C(iteration, config.opt.get('lambda_nn', 0.))
         if lambda_nn > 0:
             normals = render_pkg["normals"]
-            loss += lambda_nn * tv_loss(normals)
+            if mask_avg_loss:
+                loss += lambda_nn * tv_loss(normals, mask=gt_mask)
+            else:
+                loss += lambda_nn * tv_loss(normals)
         loss.backward()
 
         iter_end.record()

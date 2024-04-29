@@ -49,6 +49,8 @@ opt:
   iterations: 60000
   grad_clip: 0.1
 
+  mask_avg_loss: true
+
   # learning rates
   position_lr_init: 0.00016
   position_lr_final: 0.0000016
