@@ -121,7 +121,7 @@ def test(config):
             compare_img(gt_np, render_np, os.path.join(render_path, f"render_{view.image_name}_compare.png"))
 
             torchvision.utils.save_image(rendering, os.path.join(render_path, f"render_{view.image_name}.png"))
-
+            
             # evaluate
             if config.evaluate:
                 metrics = evaluator(rendering, gt)
@@ -154,7 +154,7 @@ def test(config):
 def compare_img(gt, render, save_path:str):
     exp_name = save_path.split('/')[-4] # -1 file, -2 renders, -3 test_view -4 exp
     dataset_seq_no = exp_name.split('_')[1]
-    base_line_path = f'/home/wdebang/workspace/3dgs-avatar-release/data/baseline/{dataset_seq_no}'
+    base_line_path = f'/home/zhuoran/5260Proj/data/data/baseline/{dataset_seq_no}'
     img_name = save_path.split('/')[-1]
     img_name = img_name.replace('_compare', '')
     base_line_img_path = os.path.join(base_line_path, img_name)

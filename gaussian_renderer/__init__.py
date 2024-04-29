@@ -8,10 +8,31 @@
 #
 # For inquiries contact  george.drettakis@inria.fr
 #
-
+import os
+import numpy as np
 import torch
 import math
 from diff_gaussian_rasterization import GaussianRasterizationSettings, GaussianRasterizer
+from plyfile import PlyData, PlyElement
+
+def save_ply(means3D, pc):
+    path = os.path.join('./test', "point_cloud.ply")
+
+    xyz = means3D.detach().cpu().numpy()
+    normals = np.zeros_like(xyz)
+    f_dc = pc._features_dc.detach().transpose(1, 2).flatten(start_dim=1).contiguous().cpu().numpy()
+    f_rest = pc._features_rest.detach().transpose(1, 2).flatten(start_dim=1).contiguous().cpu().numpy()
+    opacities = pc._opacity.detach().cpu().numpy()
+    scale = pc._scaling.detach().cpu().numpy()
+    rotation = pc._rotation.detach().cpu().numpy()
+
+    dtype_full = [(attribute, 'f4') for attribute in pc.construct_list_of_attributes()]
+
+    elements = np.empty(xyz.shape[0], dtype=dtype_full)
+    attributes = np.concatenate((xyz, normals, f_dc, f_rest, opacities, scale, rotation), axis=1)
+    elements[:] = list(map(tuple, attributes))
+    el = PlyElement.describe(elements, 'vertex')
+    PlyData([el]).write(path)
 
 def render(data,
            iteration,
@@ -75,6 +96,9 @@ def render(data,
     # If precomputed colors are provided, use them. Otherwise, if it is desired to precompute colors
     # from SHs in Python, do it. If not, then SH -> RGB conversion will be done by rasterizer.
     shs = None
+
+    # if iteration > 14500:
+    #     save_ply(means3D, pc)
 
     # Rasterize visible Gaussians to image, obtain their radii (on screen). 
     rendered_image, radii = rasterizer(

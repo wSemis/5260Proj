@@ -1,5 +1,6 @@
 #!/bin/bash
 
+mkdir -p exp
 dataset_values=(377 386 387 392 393 394)
 cuda_values=(0 1 2 3 4 5 6 7)
 

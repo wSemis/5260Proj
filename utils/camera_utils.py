@@ -219,3 +219,42 @@ def freeview_camera(camera, trans,
 
         all_cam_params.update({cam_name: cam_params})
     return all_cam_params
+
+def get_bound_corners(bounds):
+    min_x, min_y, min_z = bounds[0]
+    max_x, max_y, max_z = bounds[1]
+    corners_3d = np.array([
+        [min_x, min_y, min_z],
+        [min_x, min_y, max_z],
+        [min_x, max_y, min_z],
+        [min_x, max_y, max_z],
+        [max_x, min_y, min_z],
+        [max_x, min_y, max_z],
+        [max_x, max_y, min_z],
+        [max_x, max_y, max_z],
+    ])
+    return corners_3d
+
+def project(xyz, K, RT):
+    """
+    xyz: [N, 3]
+    K: [3, 3]
+    RT: [3, 4]
+    """
+    xyz = np.dot(xyz, RT[:, :3].T) + RT[:, 3:].T
+    xyz = np.dot(xyz, K.T)
+    xy = xyz[:, :2] / xyz[:, 2:]
+    return xy
+
+def get_bound_2d_mask(bounds, K, pose, H, W):
+    corners_3d = get_bound_corners(bounds)
+    corners_2d = project(corners_3d, K, pose)
+    corners_2d = np.round(corners_2d).astype(int)
+    mask = np.zeros((H, W), dtype=np.uint8)
+    cv2.fillPoly(mask, [corners_2d[[0, 1, 3, 2, 0]]], 1)
+    cv2.fillPoly(mask, [corners_2d[[4, 5, 7, 6, 4]]], 1) # 4,5,7,6,4
+    cv2.fillPoly(mask, [corners_2d[[0, 1, 5, 4, 0]]], 1)
+    cv2.fillPoly(mask, [corners_2d[[2, 3, 7, 6, 2]]], 1)
+    cv2.fillPoly(mask, [corners_2d[[0, 2, 6, 4, 0]]], 1)
+    cv2.fillPoly(mask, [corners_2d[[1, 3, 7, 5, 1]]], 1)
+    return mask

@@ -4,7 +4,7 @@ dataset_name: zju_377_mono
 
 dataset:
   name: zjumocap
-  root_dir: "/home/wdebang/workspace/3dgs-avatar-release/data/zju_processed"
+  root_dir: "/home/zhuoran/5260Proj/data/data/zjumocap-processed"
   subject: CoreView_377
   refine: false
 

@@ -15,7 +15,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 from random import randint
-from utils.loss_utils import l1_loss, ssim, tv_loss
+from utils.loss_utils import l1_loss, ssim, tv_loss, l2_loss
 from gaussian_renderer import render
 from scene import Scene, GaussianModel
 from utils.general_utils import fix_random, Evaluator, PSEvaluator
@@ -26,6 +26,7 @@ import hydra
 from omegaconf import OmegaConf
 import wandb
 import lpips
+import imageio
 
 
 def C(iteration, value):
@@ -112,13 +113,15 @@ def training(config):
 
         # Loss
         gt_image = data.original_image.cuda()
+        
+        bound_mask = data.bound_mask.unsqueeze(0)
 
         lambda_l1 = C(iteration, config.opt.lambda_l1)
         lambda_dssim = C(iteration, config.opt.lambda_dssim)
         loss_l1 = torch.tensor(0.).cuda()
         loss_dssim = torch.tensor(0.).cuda()
         if lambda_l1 > 0.:
-            loss_l1 = l1_loss(image, gt_image)
+            loss_l1 = l1_loss(image.permute(1,2,0)[bound_mask.repeat(3, 1, 1)[0]==1], gt_image.permute(1,2,0)[bound_mask.repeat(3, 1, 1)[0]==1])
         if lambda_dssim > 0.:
             loss_dssim = 1.0 - ssim(image, gt_image)
         loss = lambda_l1 * loss_l1 + lambda_dssim * loss_dssim
@@ -147,7 +150,9 @@ def training(config):
             opacity = torch.clamp(opacity, 1.e-3, 1.-1.e-3)
             loss_mask = F.binary_cross_entropy(opacity, gt_mask)
         elif config.opt.mask_loss_type == 'l1':
-            loss_mask = F.l1_loss(opacity, gt_mask)
+            loss_mask = F.l1_loss(opacity[bound_mask==1], gt_mask[bound_mask==1])
+        elif config.opt.mask_loss_type == 'l2':
+            loss_mask = l2_loss(opacity, gt_mask)
         else:
             raise ValueError
         loss += lambda_mask * loss_mask
@@ -260,8 +265,12 @@ def validation(iteration, testing_iterations, testing_interval, scene : Scene, e
             ssim_test = 0.0
             lpips_test = 0.0
             examples = []
+            
             for idx, data_idx in enumerate(config['cameras']):
                 data = getattr(scene, config['name'] + '_dataset')[data_idx]
+                
+                bound_mask = data.bound_mask.unsqueeze(0).repeat(3, 1, 1)
+                
                 render_pkg = render(data, iteration, scene, *renderArgs, compute_loss=False, return_opacity=True)
                 image = torch.clamp(render_pkg["render"], 0.0, 1.0)
                 gt_image = torch.clamp(data.original_image.to("cuda"), 0.0, 1.0)
@@ -276,9 +285,21 @@ def validation(iteration, testing_iterations, testing_interval, scene : Scene, e
                 wandb_img = wandb.Image(gt_image[None], caption=config['name'] + "_view_{}/ground_truth".format(
                     data.image_name))
                 examples.append(wandb_img)
+                
+                ori_image_scaled = (image.cpu().numpy() * 255).astype(np.uint8)
+                ori_image_scaled = np.transpose(ori_image_scaled, (1, 2, 0))
+                imageio.imwrite('ori_mask_img.png', ori_image_scaled)
+                
+                masked_image = image.cpu().numpy() * bound_mask.cpu().numpy()
+                image_scaled = (masked_image * 255).astype(np.uint8)
+                image_scaled = np.transpose(image_scaled, (1, 2, 0))
+                imageio.imwrite('bound_mask_img.png', image_scaled)
+                
+                print('masked_image: ', np.count_nonzero(image.cpu().numpy()))
+                print('masked_image: ', np.count_nonzero(bound_mask.cpu().numpy()))
 
-                l1_test += l1_loss(image, gt_image).mean().double()
-                metrics_test = evaluator(image, gt_image)
+                l1_test += l1_loss(image.permute(1,2,0)[bound_mask[0]==1], gt_image.permute(1,2,0)[bound_mask[0]==1]).mean().double()
+                metrics_test = evaluator(image, gt_image, bound_mask)
                 psnr_test += metrics_test["psnr"]
                 ssim_test += metrics_test["ssim"]
                 lpips_test += metrics_test["lpips"]

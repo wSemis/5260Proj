@@ -7,13 +7,15 @@ import numpy as np
 import json
 from utils.dataset_utils import get_02v_bone_transforms, fetchPly, storePly, AABB
 from scene.cameras import Camera
-from utils.camera_utils import freeview_camera
+from utils.camera_utils import freeview_camera, get_bound_2d_mask
 
 
 import torch
 from torch.utils.data import Dataset
 from scipy.spatial.transform import Rotation
 import trimesh
+
+from smpl.smpl_numpy import SMPL
 
 class ZJUMoCapDataset(Dataset):
     def __init__(self, cfg, split='train'):
@@ -39,6 +41,9 @@ class ZJUMoCapDataset(Dataset):
         self.skinning_weights = dict(np.load('body_models/misc/skinning_weights_all.npz'))
         self.posedirs = dict(np.load('body_models/misc/posedirs_all.npz'))
         self.J_regressor = dict(np.load('body_models/misc/J_regressors.npz'))
+        
+        self.smpl_model = SMPL(sex='neutral', model_dir='/home/zhuoran/5260Proj/body_models/smpl/neutral/model.pkl')
+        self.shape = None
 
         if split == 'train':
             cam_names = self.train_cams
@@ -257,6 +262,7 @@ class ZJUMoCapDataset(Dataset):
 
             if idx == 0:
                 smpl_data['betas'] = model_dict['betas'].astype(np.float32)
+                self.shape = smpl_data['betas']
 
             smpl_data['frames'].append(frame)
             smpl_data['root_orient'].append(model_dict['root_orient'].astype(np.float32))
@@ -294,6 +300,8 @@ class ZJUMoCapDataset(Dataset):
         K[1, 2] = self.H / 2
         R = M @ R
         T = M @ T
+        
+        w2c_R = R
 
         R = np.transpose(R)
         T = T[:, 0]
@@ -364,7 +372,38 @@ class ZJUMoCapDataset(Dataset):
         cano_max = minimal_shape_centered.max()
         cano_min = minimal_shape_centered.min()
         padding = (cano_max - cano_min) * 0.05
+        
+        batch_pose = np.concatenate([root_orient, pose_body, pose_hand], axis=-1)
+        
+        # xyz, _ = self.smpl_model(batch_pose, model_dict['betas'][0])
+        # xyz = (np.matmul(xyz, R) + T).astype(np.float32)
+        # xyz_center = np.mean(xyz, axis=0)
+        # xyz = xyz - xyz_center
+        
+        # min_xyz = np.min(xyz, axis=0)
+        # max_xyz = np.max(xyz, axis=0)
+        # min_xyz -= 0.1 # 0.1
+        # max_xyz += 0.1
+        
+        # add bound mask
+        # world_bound = np.stack([min_xyz, max_xyz], axis=0)
+        
+        min_xyz = np.min(minimal_shape, axis=0)
+        max_xyz = np.max(minimal_shape, axis=0)
+        min_xyz -= 3 # 0.1
+        max_xyz += 3 # 0.1
+        
+        world_bound = np.stack([min_xyz, max_xyz], axis=0)
+        
+        w2c = np.eye(4)
+        w2c[:3,:3] = w2c_R
+        w2c[:3,3:4] = np.expand_dims(T, axis=1)
 
+        # get bounding mask and bcakground mask
+        bound_mask = get_bound_2d_mask(world_bound, K, w2c[:3], image.shape[2], image.shape[1])
+        
+        # bound_mask = Image.fromarray(np.array(bound_mask*255.0, dtype=np.byte))
+        
         # compute pose condition
         Jtr_norm = Jtr - center
         Jtr_norm = (Jtr_norm - cano_min + padding) / (cano_max - cano_min) / 1.1
@@ -393,6 +432,7 @@ class ZJUMoCapDataset(Dataset):
             rots=torch.from_numpy(pose_rot).float().unsqueeze(0),
             Jtrs=torch.from_numpy(Jtr_norm).float().unsqueeze(0),
             bone_transforms=torch.from_numpy(bone_transforms),
+            bound_mask = torch.from_numpy(bound_mask),
         )
 
     def __getitem__(self, idx):

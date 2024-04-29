@@ -43,6 +43,8 @@ class Camera:
         self.data['rots'] = self.rots.to(self.data_device)
         self.data['Jtrs'] = self.Jtrs.to(self.data_device)
         self.data['bone_transforms'] = self.bone_transforms.to(self.data_device)
+        
+        self.data['bound_mask'] = self.bound_mask.to(self.data_device)
 
 
     def __getattr__(self, item):
