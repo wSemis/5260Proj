@@ -22,4 +22,4 @@ configs/*
 *.jpg
 *.mp4
 test/
-
+data
