@@ -71,7 +71,7 @@ class Scene:
         point_cloud_path = os.path.join(self.save_dir, "point_cloud/iteration_{}".format(iteration))
         if fn is None:
             fn = "point_cloud.ply"
-        if gaussian is not None:
+        if gaussian is None:
             self.gaussians.save_ply(os.path.join(point_cloud_path, fn))
         else:
             assert isinstance(gaussian, GaussianModel)

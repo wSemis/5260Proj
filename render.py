@@ -10,6 +10,7 @@
 #
 
 import torch
+import cv2
 import numpy as np
 from scene import Scene
 import os
@@ -97,9 +98,11 @@ def test(config):
         ssims = []
         lpipss = []
         times = []
+        to_viz = ['c10_f000300']
         for idx in trange(len(scene.test_dataset), desc="Rendering progress"):
             view = scene.test_dataset[idx]
             iter_start.record()
+            name = view.image_name
 
             render_pkg = render(view, config.opt.iterations, scene, config.pipeline, background,
                                 compute_loss=False, return_opacity=False)
@@ -111,6 +114,16 @@ def test(config):
             rendering = render_pkg["render"]
 
             gt = view.original_image[:3, :, :]
+            if name in to_viz:
+                print("\n[ITER {}] Saving Gaussians".format(idx))
+                print("\n Number of points: ", scene.gaussians.get_xyz.shape[0])
+                scene.save(idx, fn="canonical.ply")
+                scene.save(idx, fn=f"deformed_img_iter{idx}.ply", gaussian=render_pkg["deformed_gaussian"])
+                # save gt img
+                gt_img = gt.cpu().numpy().transpose(1, 2, 0)
+                gt_img = cv2.cvtColor(gt_img, cv2.COLOR_RGB2BGR)
+                cv2.imwrite(os.path.join(config.exp_dir, f"gt_img_iter_{idx}.png"), gt_img * 255)
+                exit()
 
             wandb_img = [wandb.Image(rendering[None], caption='render_{}'.format(view.image_name)),
                          wandb.Image(gt[None], caption='gt_{}'.format(view.image_name))]
@@ -121,7 +134,7 @@ def test(config):
             compare_img(gt_np, render_np, os.path.join(render_path, f"render_{view.image_name}_compare.png"))
 
             torchvision.utils.save_image(rendering, os.path.join(render_path, f"render_{view.image_name}.png"))
-
+            
             # evaluate
             if config.evaluate:
                 metrics = evaluator(rendering, gt)
@@ -154,7 +167,7 @@ def test(config):
 def compare_img(gt, render, save_path:str):
     exp_name = save_path.split('/')[-4] # -1 file, -2 renders, -3 test_view -4 exp
     dataset_seq_no = exp_name.split('_')[1]
-    base_line_path = f'/home/wdebang/workspace/3dgs-avatar-release/data/baseline/{dataset_seq_no}'
+    base_line_path = f'/home/zhuoran/5260Proj/data/data/baseline/{dataset_seq_no}'
     img_name = save_path.split('/')[-1]
     img_name = img_name.replace('_compare', '')
     base_line_img_path = os.path.join(base_line_path, img_name)
