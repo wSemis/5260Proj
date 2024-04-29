@@ -23,14 +23,16 @@ def l1_loss(network_output, gt, mask=None):
         return torch.abs((network_output - gt)).mean()
     if mask.shape[0] == 1:
         mask = mask.repeat(network_output.shape[0], 1, 1)
-    return (torch.abs((network_output - gt)) * mask) / mask.sum()
+    mask = mask.detach()
+    return (torch.abs((network_output - gt)) * mask).sum() / mask.sum()
 
 def l2_loss(network_output, gt, mask=None):
     if mask is None:
         return ((network_output - gt) ** 2).mean()
     if mask.shape[0] == 1:
         mask = mask.repeat(network_output.shape[0], 1, 1)
-    return ((network_output - gt) ** 2 * mask) / mask.sum()
+    mask = mask.detach()
+    return ((network_output - gt) ** 2 * mask).sum() / mask.sum()
 
 def gaussian(window_size, sigma):
     gauss = torch.Tensor([exp(-(x - window_size // 2) ** 2 / float(2 * sigma ** 2)) for x in range(window_size)])
@@ -125,13 +127,14 @@ def tv_loss(pred, mask=None):
     
     if mask.shape[0] == 1:
         mask = mask.repeat(pred.shape[0], 1, 1)
-        
+    mask = mask.detach()
+
     if len(pred.shape) == 4:
         raise NotImplementedError
     else:
         # Handle the case for non-batch data (assuming (H, W) shape)
-        dy = torch.abs(pred[1:, :] - pred[:-1, :]) * mask[1:, :] * mask[:-1, :]
-        dx = torch.abs(pred[:, 1:] - pred[:, :-1]) * mask[:, 1:] * mask[:, :-1]
+        dy = torch.abs(pred[:, 1:, :] - pred[:, :-1, :]) * mask[:, 1:, :] * mask[:, :-1, :]
+        dx = torch.abs(pred[:, :, 1:] - pred[:, :, :-1]) * mask[:, :, 1:] * mask[:, :, :-1]
 
     # Only consider masked regions, prevent division by zero
     valid_dy = mask[:, 1:, :] * mask[:, :-1, :]
