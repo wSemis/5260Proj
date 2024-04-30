@@ -26,5 +26,5 @@ echo "export CUDA_VISIBLE_DEVICES=${2}" >> exp/${1}.log
 export CUDA_VISIBLE_DEVICES=${2}
 echo "python train.py dataset=zjumocap_${1}_mono >> exp/${1}.log 2>>exp/${1}_2.log"
 echo "python render.py mode=test dataset.test_mode=view dataset=zjumocap_${1}_mono >> exp/${1}.log 2>>exp/${1}_2.log"
-# python train.py dataset=zjumocap_${1}_mono >> exp/${1}.log 2>>exp/${1}_2.log
+python train.py dataset=zjumocap_${1}_mono >> exp/${1}.log 2>>exp/${1}_2.log
 python render.py mode=test dataset.test_mode=view dataset=zjumocap_${1}_mono >> exp/${1}.log 2>>exp/${1}_2.log

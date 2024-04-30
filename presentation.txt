@@ -1,0 +1,93 @@
+P1
+
+Hi everyone we are group 13. Our topic is Towards Realistic Animating Human.
+I'm Zhao Zhuoran.
+
+P2
+
+The outline of our presentation is as follows.
+
+P3
+
+Reconstructing 3D human avatars from image inputs has vast applications in virtual reality, gaming, and e-commerce.
+
+P4
+
+Some existing methods based on neural radiance fields (NeRFs)[1] often require days of training, and are extremely slow at inference time.
+
+P5
+
+Another method, recently proposed 3D Gaussian Splatting model[2], makes it possible to achieve state-of-the-art rendering quality using only a fraction of NeRFs’ inference time
+
+P6
+
+Recent works start exploring using 3D Gaussian Splatting model to realize realistic 3D human reconstruction this year[3-7], among which, 3D Gaussian Splatting Avatar is one of the SOTA works.
+
+P7
+
+However, there exists some limitation on this work. Firstly, the surface is rough, possibly because of unsmooth geometry. Secondly, some detail information is missing.
+
+P8
+
+Also, the lighting effect is unnatural. And the generalization in novel poses performs bad.
+
+P9
+
+Before introducing our proprosed method, I shall breifly introduce the 3DGS framework. 3D Gaussians are initialized on the canonical mesh surface. 
+The Gaussians are transformed into Observation Space using non-rigid transformation and rigid transformation with the help of parametric model.
+The transformed Observation Space features are then fed to Color MLP followed rasterization.
+
+P10
+We have tested multiple improvements, we will demonstrate some of them as below. 
+
+To improve the rough surface and unsmooth geometry issue, we propose to correct pose, root translation and orientation using MLP. 
+Since the SMPL estimation can be inaccurate, which misleads the rigid transformation and results into bad results,
+ we propose to use residual MLP to make the paramters optimizable
+
+P11
+
+We also propose the framework with normal cues
+
+We define a geomoetric normal for each Gaussian with rotation matrix under Special Orthogonal Group SO3
+
+Then we can obtain the per-pixel normal by compositing the Guassian normals weighted by alphas
+
+With the per-pixel normal, we calculate the loss at neighboring pixels as is shown in the formula
+
+P12
+
+To solve the unnatural lighting effect, we propose to the avg frame appearance embedding.
+
+appearance embedding is used to specific lighting in each frame at training time.
+
+We believe that unbiased lighting effect is better
+
+So we propose to use the average encoding at inference time
+
+P13
+
+Next we will show you our current results
+
+Quantatively, our result is comparable to the baseline.
+
+P14
+
+Qualitatively, our method can have a smoother surface and more plausible geometry, as can be seen on the shoulder part.
+
+P15
+
+Our method can better reconstruct details. As you can see, the 3 color label is present in our result.
+
+P16
+
+We can achieve more nature lighting effect. As you can see, our reconstructed arm have less dark artifects.
+
+P17
+
+Our investigation is still ongoing with more experiments needed.
+
+We need to finetune our hyperparameter to achieve better Quantative results
+Training Gaussian Splatting with MLP transformations is hard, we want to compare different training strategy
+We find out that our method can converge faster, but the training strategy needs to be tuned.
+
+We also find more potential improvements, for example, adding constraints between frames, and having different training strategy on different human body part.

@@ -67,9 +67,15 @@ class Scene:
         loss_skinning = loss_reg.get('loss_skinning', torch.tensor(0.).cuda())
         return loss_skinning
 
-    def save(self, iteration):
+    def save(self, iteration, gaussian=None, fn=None):
         point_cloud_path = os.path.join(self.save_dir, "point_cloud/iteration_{}".format(iteration))
-        self.gaussians.save_ply(os.path.join(point_cloud_path, "point_cloud.ply"))
+        if fn is None:
+            fn = "point_cloud.ply"
+        if gaussian is None:
+            self.gaussians.save_ply(os.path.join(point_cloud_path, fn))
+        else:
+            assert isinstance(gaussian, GaussianModel)
+            gaussian.save_ply(os.path.join(point_cloud_path, fn))
 
     def save_checkpoint(self, iteration):
         print("\n[ITER {}] Saving Checkpoint".format(iteration))

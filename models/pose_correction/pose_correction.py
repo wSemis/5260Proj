@@ -197,9 +197,7 @@ class DirectPoseOptimization(PoseCorrection):
         else:
             self.root_orients = nn.Embedding.from_pretrained(torch.from_numpy(root_orient).float(), freeze=False)
             self.pose_bodys = nn.Embedding.from_pretrained(torch.from_numpy(pose_body).float(), freeze=False)
-        
             self.pose_hands = nn.Embedding.from_pretrained(torch.from_numpy(pose_hand).float(), freeze=False)
-            
             self.trans = nn.Embedding.from_pretrained(torch.from_numpy(trans).float(), freeze=False)
 
         self.register_parameter('betas', nn.Parameter(torch.tensor(betas, dtype=torch.float32)))

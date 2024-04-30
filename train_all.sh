@@ -2,7 +2,7 @@
 
 # Define an array of numbers
 # numbers=(377 386 387)
-numbers=(387 392 393 394)
+numbers=(392 393 394)
 gpus=(3 4 5 6)
 mkdir -p exp
 echo $1 >> exp/info.txt

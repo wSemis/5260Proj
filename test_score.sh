@@ -1,0 +1,1 @@
+python readnpz.py 123 >> exp/info.txt

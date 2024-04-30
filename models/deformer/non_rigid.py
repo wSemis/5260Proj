@@ -217,6 +217,11 @@ class HashGridwithMLP(NonRigidDeform):
             if self.feature_dim > 0:
                 setattr(deformed_gaussians, "non_rigid_feature",
                         torch.zeros(gaussians.get_xyz.shape[0], self.feature_dim).cuda())
+            # xyz = gaussians.get_xyz
+            # xyz_norm = self.aabb.normalize(xyz, sym=True)
+            # feature = self.hashgrid(xyz_norm)
+            # deformed_gaussians._xyz_feat = feature
+
             return deformed_gaussians, {}
 
         rots = camera.rots
@@ -234,6 +239,9 @@ class HashGridwithMLP(NonRigidDeform):
             latent_code = latent_code.expand(pose_feat.shape[0], -1)
             pose_feat = torch.cat([pose_feat, latent_code], dim=1)
 
+        # if self.training and (torch.rand(1).item() < 0.3):
+        #     pose_feat = torch.zeros_like(pose_feat)
+
         xyz = gaussians.get_xyz
         xyz_norm = self.aabb.normalize(xyz, sym=True)
         deformed_gaussians = gaussians.clone()
@@ -245,6 +253,8 @@ class HashGridwithMLP(NonRigidDeform):
         delta_rot = deltas[:, 6:10]
 
         deformed_gaussians._xyz = gaussians._xyz + delta_xyz
+        deformed_gaussians._xyz_norm = self.aabb.normalize(deformed_gaussians._xyz, sym=True)
+        deformed_gaussians._xyz_feat = self.hashgrid(deformed_gaussians._xyz_norm)
 
         scale_offset = self.cfg.get('scale_offset', 'logit')
         if scale_offset == 'logit':

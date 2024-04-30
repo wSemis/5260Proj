@@ -86,7 +86,10 @@ class GaussianModel:
                       "_opacity"]
         for parameter in parameters:
             setattr(cloned, parameter, getattr(self, parameter) + 0.)
-
+            
+        if hasattr(self, '_xyz_feat'):
+            cloned._xyz_feat = self._xyz_feat + 0.
+        
         return cloned
 
     def set_fwd_transform(self, T_fwd):

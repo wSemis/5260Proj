@@ -73,13 +73,20 @@ opt:
   mask_loss_type: l1 # l1
   lambda_mask: [0.1,5000,0.2] # [0.1,5000,0.2]
   # lambda_mask: 0.1
+
   lambda_opacity: 0.
   lambda_skinning: [10,1000,0.1]
   lambda_pose: 0.
   lambda_aiap_xyz: 1.
   lambda_aiap_cov: 100.
-  lambda_nn: 0.
+
+  lambda_nn: 0.1
+  lambda_nc: 0.0
   lambda_texture_l2_reg: 0
+
+  # lambda_nr_xyz: 0.01
+  # lambda_nr_scale: 0.01
+  # lambda_nr_rot: 0.01
 
   # densification configs
   percent_dense: 0.01

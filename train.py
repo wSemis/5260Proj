@@ -202,6 +202,12 @@ def training(config):
                 loss += lambda_nn * tv_loss(normals, mask=gt_mask)
             else:
                 loss += lambda_nn * tv_loss(normals)
+        
+        # nerghbor color loss
+        lambda_nc = C(iteration, config.opt.get('lambda_nc', 0.))
+        if lambda_nc > 0:
+            loss += lambda_nc * tv_loss(image)
+            
         loss.backward()
 
         iter_end.record()
@@ -237,8 +243,14 @@ def training(config):
             validation(iteration, testing_iterations, testing_interval, scene, evaluator,(pipe, background))
             if (iteration in saving_iterations):
                 print("\n[ITER {}] Saving Gaussians".format(iteration))
-                scene.save(iteration)
-
+                print("\n Number of points: ", scene.gaussians.get_xyz.shape[0])
+                scene.save(iteration, fn="canonical.ply")
+                scene.save(iteration, fn=f"deformed_img{data_idx}.ply", gaussian=render_pkg["deformed_gaussian"])
+                # save gt img
+                gt_img = data.original_image.cpu().numpy().transpose(1, 2, 0)
+                gt_img = cv2.cvtColor(gt_img, cv2.COLOR_RGB2BGR)
+                cv2.imwrite(os.path.join(config.exp_dir, f"gt_img_{iteration}.png"), gt_img * 255)
+                
             # Densification
             if iteration < opt.densify_until_iter and iteration > model.gaussian.delay:
                 # Keep track of max radii in image-space for pruning
