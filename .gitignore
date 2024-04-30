@@ -16,3 +16,10 @@ scripts
 SIBR_viewers
 *.log
 exp_old
+data/*
+configs/*
+*.png
+*.jpg
+*.mp4
+test/
+data

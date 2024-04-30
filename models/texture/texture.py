@@ -115,7 +115,7 @@ class ColorMLP(ColorPrecompute):
             features = torch.cat([features, gaussians.non_rigid_feature], dim=1)
         if self.latent_dim > 0:
             frame_idx = camera.frame_id
-            if self.training or True:
+            if self.training:
                 if frame_idx not in self.frame_dict:
                     latent_idx = len(self.frame_dict) - 1
                     print(f"Frame {frame_idx} not in frame_dict, using last latent code")

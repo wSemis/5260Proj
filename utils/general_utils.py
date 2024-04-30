@@ -215,7 +215,7 @@ def fix_random(seed):
         torch.cuda.manual_seed(seed)
         torch.backends.cudnn.benchmark = False
         torch.backends.cudnn.deterministic = True
-        torch.use_deterministic_algorithms(True)
+        # torch.use_deterministic_algorithms(True)
 
 # evaluation metrics
 class Evaluator(nn.Module):
@@ -225,8 +225,12 @@ class Evaluator(nn.Module):
         self.ssim = SSIM()
         self.lpips = LPIPS()
 
-    def forward(self, inputs, targets):
-        psnr = self.psnr(inputs, targets)
+    def forward(self, inputs, targets, mask=None):
+        
+        if mask != None:
+            psnr = self.psnr(inputs[mask==1], targets[mask==1])
+        else:
+            psnr = self.psnr(inputs, targets)
         ssim = self.ssim(inputs, targets)
         lpips_ = self.lpips(inputs, targets)
         return {

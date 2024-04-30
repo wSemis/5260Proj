@@ -180,9 +180,9 @@ class DirectPoseOptimization(PoseCorrection):
         pose_body = np.array(pose_body)
         pose_hand = np.array(pose_hand)
         trans = np.array(trans)
-        self.use_mlp = True
-        if self.use_mlp:
+        self.use_pose_mlp = True
         
+        if self.use_pose_mlp:
             self.root_orients = nn.Embedding.from_pretrained(torch.from_numpy(root_orient).float(), freeze=True)
             self.root_orients_mlp = self.get_nn_from_emb(self.root_orients)
             
@@ -234,7 +234,7 @@ class DirectPoseOptimization(PoseCorrection):
         pose_hand = self.pose_hands(idx)
         trans = self.trans(idx)
         
-        if self.use_mlp:
+        if self.use_pose_mlp:
             root_orient = root_orient + self.root_orients_mlp(root_orient)
             pose_body = pose_body + self.pose_bodys_mlp(pose_body)
             pose_hand = pose_hand + self.pose_hands_mlp(pose_hand)

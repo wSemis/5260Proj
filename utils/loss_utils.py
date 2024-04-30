@@ -18,11 +18,21 @@ import numpy as np
 import cv2
 from pytorch3d.ops.knn import knn_points
 
-def l1_loss(network_output, gt):
-    return torch.abs((network_output - gt)).mean()
+def l1_loss(network_output, gt, mask=None):
+    if mask is None:
+        return torch.abs((network_output - gt)).mean()
+    if mask.shape[0] == 1:
+        mask = mask.repeat(network_output.shape[0], 1, 1)
+    mask = mask.detach()
+    return (torch.abs((network_output - gt)) * mask).sum() / mask.sum()
 
-def l2_loss(network_output, gt):
-    return ((network_output - gt) ** 2).mean()
+def l2_loss(network_output, gt, mask=None):
+    if mask is None:
+        return ((network_output - gt) ** 2).mean()
+    if mask.shape[0] == 1:
+        mask = mask.repeat(network_output.shape[0], 1, 1)
+    mask = mask.detach()
+    return ((network_output - gt) ** 2 * mask).sum() / mask.sum()
 
 def gaussian(window_size, sigma):
     gauss = torch.Tensor([exp(-(x - window_size // 2) ** 2 / float(2 * sigma ** 2)) for x in range(window_size)])
@@ -102,14 +112,34 @@ def aiap_loss(x_canonical, x_deformed, n_neighbors=5, nn_ix=None):
 
     return loss
 
-def tv_loss(pred):
+def tv_loss(pred, mask=None):
     """
     Total variation loss
     """
+    if mask is None:
+        if len(pred.shape) == 4:
+            dy = torch.abs(pred[:, :, 1:, :] - pred[:, :, :-1, :])
+            dx = torch.abs(pred[:, :, :, 1:] - pred[:, :, :, :-1])
+        else:
+            dy = torch.abs(pred[:, 1:, :] - pred[:, :-1, :])
+            dx = torch.abs(pred[:, :, 1:] - pred[:, :, :-1])
+        return torch.mean(dx) + torch.mean(dy)
+    
+    if mask.shape[0] == 1:
+        mask = mask.repeat(pred.shape[0], 1, 1)
+    mask = mask.detach()
+
     if len(pred.shape) == 4:
-        dy = torch.abs(pred[:, :, 1:, :] - pred[:, :, :-1, :])
-        dx = torch.abs(pred[:, :, :, 1:] - pred[:, :, :, :-1])
+        raise NotImplementedError
     else:
-        dy = torch.abs(pred[:, 1:, :] - pred[:, :-1, :])
-        dx = torch.abs(pred[:, :, 1:] - pred[:, :, :-1])
-    return torch.mean(dx) + torch.mean(dy)
+        # Handle the case for non-batch data (assuming (H, W) shape)
+        dy = torch.abs(pred[:, 1:, :] - pred[:, :-1, :]) * mask[:, 1:, :] * mask[:, :-1, :]
+        dx = torch.abs(pred[:, :, 1:] - pred[:, :, :-1]) * mask[:, :, 1:] * mask[:, :, :-1]
+
+    # Only consider masked regions, prevent division by zero
+    valid_dy = mask[:, 1:, :] * mask[:, :-1, :]
+    valid_dx = mask[:, :, 1:] * mask[:, :, :-1]
+
+    return (torch.sum(dx) / torch.clamp(torch.sum(valid_dx), min=1) +
+            torch.sum(dy) / torch.clamp(torch.sum(valid_dy), min=1))
+

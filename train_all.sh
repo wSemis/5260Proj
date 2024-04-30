@@ -1,8 +1,9 @@
 #!/bin/bash
 
 # Define an array of numbers
-numbers=(386 387 393)
-gpus=(3 4 5)
+# numbers=(377 386 387)
+numbers=(392 393 394)
+gpus=(3 4 5 6)
 mkdir -p exp
 echo $1 >> exp/info.txt
 # Check if a tmux session exists, else create one
@@ -19,7 +20,7 @@ for i in "${!numbers[@]}"; do
     gpu_num=${gpus[$i]}
     echo "Setting up tmux window for num=$exp_num and cuda=$gpu_num"
     # Create a new window in tmux session and run the script
-    tmux new-window -t $session -n "train_$exp_num" "./train.sh $exp_num $gpu_num"
+    tmux new-window  -n "train_$exp_num" "./train.sh $exp_num $gpu_num"
 done
 
 tmux detach -s $session
