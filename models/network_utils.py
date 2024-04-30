@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 import torch.nn as nn
-# import tinycudann as tcnn
+import tinycudann as tcnn
 from omegaconf import OmegaConf
 
 

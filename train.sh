@@ -1,6 +1,5 @@
 #!/bin/bash
 
-mkdir -p exp
 dataset_values=(377 386 387 392 393 394)
 cuda_values=(0 1 2 3 4 5 6 7)
 
@@ -23,6 +22,9 @@ fi
 
 echo "Training on dataset zjumocap_${1}_mono with CUDA_VISIBLE_DEVICES=$2"
 echo "Training on dataset zjumocap_${1}_mono with CUDA_VISIBLE_DEVICES=$2" >> exp/${1}.log
+echo "export CUDA_VISIBLE_DEVICES=${2}" >> exp/${1}.log
 export CUDA_VISIBLE_DEVICES=${2}
-python train.py dataset=zjumocap_${1}_mono >> exp/${1}.log 2>>&1
-python render.py mode=test dataset.test_mode=view dataset=zjumocap_${1}_mono >> exp/${1}.log 2>&1
+echo "python train.py dataset=zjumocap_${1}_mono >> exp/${1}.log 2>>exp/${1}_2.log"
+echo "python render.py mode=test dataset.test_mode=view dataset=zjumocap_${1}_mono >> exp/${1}.log 2>>exp/${1}_2.log"
+# python train.py dataset=zjumocap_${1}_mono >> exp/${1}.log 2>>exp/${1}_2.log
+python render.py mode=test dataset.test_mode=view dataset=zjumocap_${1}_mono >> exp/${1}.log 2>>exp/${1}_2.log

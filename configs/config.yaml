@@ -49,7 +49,7 @@ opt:
   iterations: 60000
   grad_clip: 0.1
 
-  mask_avg_loss: true
+  mask_avg_loss: false
 
   # learning rates
   position_lr_init: 0.00016
@@ -78,7 +78,7 @@ opt:
   lambda_pose: 0.
   lambda_aiap_xyz: 1.
   lambda_aiap_cov: 100.
-  lambda_nn: 0.1
+  lambda_nn: 0.
   lambda_texture_l2_reg: 0
 
   # densification configs

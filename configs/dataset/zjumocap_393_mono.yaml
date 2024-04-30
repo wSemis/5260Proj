@@ -4,7 +4,7 @@ dataset_name: zju_393_mono
 
 dataset:
   name: zjumocap
-  root_dir: "/home/zhuoran/5260Proj/data/data/zjumocap-processed"
+  root_dir: "data/zjumocap-processed"
   subject: CoreView_393
   refine: false
 

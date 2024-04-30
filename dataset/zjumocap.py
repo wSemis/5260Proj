@@ -42,7 +42,7 @@ class ZJUMoCapDataset(Dataset):
         self.posedirs = dict(np.load('body_models/misc/posedirs_all.npz'))
         self.J_regressor = dict(np.load('body_models/misc/J_regressors.npz'))
         
-        self.smpl_model = SMPL(sex='neutral', model_dir='/home/zhuoran/5260Proj/body_models/smpl/neutral/model.pkl')
+        self.smpl_model = SMPL(sex='neutral', model_dir='body_models/smpl/neutral/model.pkl')
         self.shape = None
 
         if split == 'train':
@@ -390,8 +390,8 @@ class ZJUMoCapDataset(Dataset):
         
         min_xyz = np.min(minimal_shape, axis=0)
         max_xyz = np.max(minimal_shape, axis=0)
-        min_xyz -= 3 # 0.1
-        max_xyz += 3 # 0.1
+        min_xyz -= 1 # 0.1 #TODO
+        max_xyz += 1 # 0.1
         
         world_bound = np.stack([min_xyz, max_xyz], axis=0)
         

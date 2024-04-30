@@ -131,6 +131,8 @@ def training(config):
                 loss_l1 = l1_loss(image, gt_image, gt_mask)
             else:
                 loss_l1 = l1_loss(image.permute(1,2,0)[bound_mask.repeat(3, 1, 1)[0]==1], gt_image.permute(1,2,0)[bound_mask.repeat(3, 1, 1)[0]==1])
+                # loss_l1 = l1_loss(image, gt_image)
+
         if lambda_dssim > 0.:
             loss_dssim = 1.0 - ssim(image, gt_image)
         loss = lambda_l1 * loss_l1 + lambda_dssim * loss_dssim
@@ -160,6 +162,7 @@ def training(config):
             loss_mask = F.binary_cross_entropy(opacity, gt_mask)
         elif config.opt.mask_loss_type == 'l1':
             loss_mask = F.l1_loss(opacity[bound_mask==1], gt_mask[bound_mask==1])
+            # loss_mask = F.l1_loss(opacity, gt_mask)
         elif config.opt.mask_loss_type == 'l2':
             loss_mask = l2_loss(opacity, gt_mask)
         else:
