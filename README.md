@@ -1,39 +1,19 @@
-# 3DGS-Avatar: Animatable Avatars via Deformable 3D Gaussian Splatting
-## [Paper](https://arxiv.org/abs/2312.09228) | [Project Page](https://neuralbodies.github.io/3DGS-Avatar/index.html)
+# CS5260 Project: Towards Realistic Animating Human 
 
-<img src="assets/teaser.gif" width="800"/> 
-
-This repository contains the implementation of the CVPR 2024 submission 
-[3DGS-Avatar: Animatable Avatars via Deformable 3D Gaussian Splatting](https://arxiv.org/abs/2312.09228).
 
 You can find detailed usage instructions for using pretrained models and training your own models below.
 
-If you find our code useful, please cite:
-
-```bibtex
-@article{qian20233dgsavatar,
-   title={3DGS-Avatar: Animatable Avatars via Deformable 3D Gaussian Splatting}, 
-   author={Zhiyin Qian and Shaofei Wang and Marko Mihajlovic and Andreas Geiger and Siyu Tang},
-   booktitle={CVPR},
-   year={2024},
-}
-```
 
 ## Installation
 ### Environment Setup
 This repository has been tested on the following platform:
 1) Python 3.7.13, PyTorch 1.12.1 with CUDA 11.6 and cuDNN 8.3.2, Ubuntu 22.04/CentOS 7.9.2009
 
-To clone the repo, run either:
+To clone the repo, run :
 ```
-git clone --recursive https://github.com/mikeqzy/3dgs-avatar-release.git
+git clone --recursive https://github.com/wSemis/5260Proj.git
 ```
-or
-```
-git clone https://github.com/mikeqzy/3dgs-avatar-release.git
-cd 3dgs-avatar-release
-git submodule update --init --recursive
-```
+
 
 Next, you have to make sure that you have all dependencies in place.
 The simplest way to do so, is to use [anaconda](https://www.anaconda.com/). 
@@ -70,20 +50,15 @@ Due to license issues, we cannot publicly distribute our preprocessed ZJU-MoCap 
 Please follow the instructions of [ARAH](https://github.com/taconite/arah-release) to download and preprocess the datasets.
 For PeopleSnapshot, we use the optimized SMPL parameters from Anim-NeRF [here](https://drive.google.com/drive/folders/1tbBJYstNfFaIpG-WBT6BnOOErqYUjn6V?usp=drive_link).
 
-## Results on ZJU-MoCap
-For easy comparison to our approach, we also store all our pretrained models and renderings on the ZJU-MoCap dataset [here](https://drive.google.com/drive/folders/1-miCqOPoOO1XATQECyHz1qgocrtTSD8L?usp=drive_link).
 
 ## Training
 To train new networks from scratch, run
 ```shell
 # ZJU-MoCap
-python train.py dataset=zjumocap_377_mono
-# PeopleSnapshot
-python train.py dataset=ps_female_3 option=iter30k pose_correction=none 
+sh ./train.sh [subject_num] [cuda_num]
 ```
 To train on a different subject, simply choose from the configs in `configs/dataset/`.
 
-We use [wandb](https://wandb.ai) for online logging, which is free of charge but needs online registration.
 
 ## Evaluation
 To evaluate the method for a specified subject, run
@@ -110,7 +85,7 @@ where `dataset.predict_seq=3` corresponds to the canonical rendering.
 Currently, the code only supports animating ZJU-MoCap models for out-of-distribution models.
 
 ## License
-We employ [MIT License](LICENSE) for the 3DGS-Avatar code, which covers
+[MIT License](LICENSE) is for the 3DGS-Avatar code, which covers
 ```
 configs
 dataset
@@ -119,13 +94,16 @@ utils/dataset_utils.py
 extract_smpl_parameters.py
 render.py
 train.py
+readnpz.py
 ```
 
 The rest of the code are modified from [3DGS](https://github.com/graphdeco-inria/gaussian-splatting). 
 Please consult their license and cite them.
 
+Please consider citing [3DGS-avatar](https://github.com/mikeqzy/3dgs-avatar-release).
+
 ## Acknowledgement
-This project is built on source codes from [3DGS](https://github.com/graphdeco-inria/gaussian-splatting). 
+This project is built on source codes from [3DGS-avatar](https://github.com/mikeqzy/3dgs-avatar-release), which built on [3DGS](https://github.com/graphdeco-inria/gaussian-splatting). 
 We also use the data preprocessing script and part of the network implementations from [ARAH](https://github.com/taconite/arah-release).
 We sincerely thank these authors for their awesome work.
 
